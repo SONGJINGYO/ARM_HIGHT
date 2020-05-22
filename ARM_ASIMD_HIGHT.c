@@ -5,23 +5,19 @@
 #include<sys/time.h>
 #include<unistd.h>
 #define loop 10000000
-
-void HIGHT_encrypt(unsigned char* PT, unsigned char* CT, unsigned char* K);
+//16개 PT Data 병렬화를 적용한 함수입니다.
+void HIGHT_16_Data(unsigned char* PT, unsigned char* CT, unsigned char* K);
+//Transposed 라운드 키 스케쥴 함수입니다.
 void HIGHT_RoundKey_Setting(unsigned char* Roundkey, unsigned char* Masterkey);
+//8개 PT Task, Data 병렬화를 적용한 함수입니다.
 void HIGHT_encrypt_8_Data_Task(unsigned char* PT, unsigned char* CT, unsigned char* K);
-void HIGHT_encrypt_8_Data_Task_loop(unsigned char* PT, unsigned char* CT, unsigned char* K);
-void HIGHT_encrypt_8_Data_Task_loop_LDR(unsigned char* PT, unsigned char* CT, unsigned char* K);
 void F_Function_M4(unsigned char* state);
 void F_Function_ARMv8(unsigned char* state);
-void HIGHT_revise(unsigned char* CT, unsigned char* PT, unsigned char* KEY);
-void HIGHT_original(unsigned char* CT, unsigned char* PT, unsigned char* KEY);
-
-void test_F_Function(unsigned char* PT);
-void test_F_Function_Table(unsigned char* PT);
-void F_Function_M4_8PT(unsigned char* state);
+//cycle 측정함수
 int64_t cpucycles(void);
-void HIGHT_Final(unsigned char* CT, unsigned char* PT, unsigned char* Roundkey);
-void HIGHT_Final2(unsigned char* CT, unsigned char* PT, unsigned char* Roundkey);
+//Transposed 라운드 키 함수를 적용한 8개 PT Task, Data 병렬화 함수입니다.
+void HIGHT_Transposed(unsigned char* CT, unsigned char* PT, unsigned char* Roundkey);
+
 int main() {
 	unsigned char state[128] = { 0,0,0,0,0,0,0,0,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x01,0x23,0x45,0x67,0x89,0xab,0xcd,0xef,0xb4,0x1e,0x6b,0xe2,0xeb,0xa8,0x4a,0x14,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x21,0x22,0x23,0x24,0x25,0x26,0x27,0x28,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x51,0x52,0x53,0x54,0x55,0x56,0x57,0x58,0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x91,0x92,0x93,0x94,0x95,0x96,0x97,0x98,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,0xa8,0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,0xb8,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8 };
 	unsigned char state5[128] = { 0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77 };
@@ -41,30 +37,7 @@ int main() {
 	unsigned long long cycles = 0, cycles1 = 0, cycles2 = 0;
 	unsigned char Masterkey[16] = { 0xff,0xee,0xdd,0xcc,0xbb,0xaa,0x99,0x88,0x77,0x66,0x55,0x44,0x33,0x22,0x11,0x00 };
 	unsigned char Round[1088] = { 0x00, };
-	cycles = 0;
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-		HIGHT_revise(state2, state3, KEY);
-	}
-
-	cycles2 = cpucycles();
-	cycles += (cycles2 - cycles1);
-	printf("HIGHT revise = %10lld\n", cycles / loop);
-	cycles = 0;
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
-		HIGHT_original(state2, state3, Round);
-
-	}
-
-	cycles2 = cpucycles();
-	cycles += (cycles2 - cycles1);
-
-	printf("HIGHT original = %10lld\n", cycles / loop);
-
-
-	cycles = 0;
+	
 	cycles1 = cpucycles();
 	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
 
@@ -84,35 +57,18 @@ int main() {
 	cycles1 = cpucycles();
 	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
 
-		HIGHT_Final(state2, state3, Round);
+		HIGHT_Transposed(state2, state3, Round);
 
 	}
 
 	cycles2 = cpucycles();
 	cycles += (cycles2 - cycles1);
 
-	printf("HIGHT FINAL = %10lld\n", cycles / loop);
+	printf("HIGHT Transposed = %10lld\n", cycles / loop);
 
 
 	cycles = 0;
 
-
-
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
-		F_Function_M4_8PT(state2);
-
-
-	}
-
-	cycles2 = cpucycles();
-	cycles += (cycles2 - cycles1);
-
-	printf("F Function M4 = %10lld\n", cycles / loop);
-
-
-	cycles = 0;
 	cycles1 = cpucycles();
 	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
 
@@ -140,26 +96,13 @@ int main() {
 	cycles2 = cpucycles();
 	cycles += (cycles2 - cycles1);
 
-	printf("ARMv8 8 PT Task, Data parall= %10lld\n", cycles / loop);
+	printf("ARMv8 F Function = %10lld\n", cycles / loop);
 
 
 
 	cycles = 0;
 
 
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
-		HIGHT_encrypt_8_Data_Task_loop_LDR(state2, state3, KEY);
-
-
-	}
-	cycles2 = cpucycles();
-	cycles += (cycles2 - cycles1);
-	printf("LDR loop 16 PT& 8PT Data,Task Parall=%10lld\n", cycles / loop);
-
-
-	cycles = 0;
 	cycles1 = cpucycles();
 	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
 
@@ -169,26 +112,14 @@ int main() {
 	}
 	cycles2 = cpucycles();
 	cycles += (cycles2 - cycles1);
-	printf("16PT, 8PT Task,Data parall=%10lld\n", cycles / loop);
+	printf("8PT Task,Data parall=%10lld\n", cycles / loop);
+
 
 	cycles = 0;
 	cycles1 = cpucycles();
 	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
 
-		HIGHT_encrypt_8_Data_Task_loop(state2, state3, KEY);
-
-
-
-	}
-	cycles2 = cpucycles();
-	cycles = cycles + (cycles2 - cycles1);
-	printf("loop 16PT, 8PT Task,Data parall=%10lld\n", cycles / loop);
-
-	cycles = 0;
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
-		HIGHT_encrypt(state4, state5, KEY);
+		HIGHT_16_Data(state4, state5, KEY);
 
 
 
@@ -201,7 +132,7 @@ int main() {
 	cycles = 0;
 	cycles1 = cpucycles();
 	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
+		//HIGHT 함수는 KISA HIGHT 암호 오픈 소스코드 의미합니다.
 		HIGHT(state2, KEY);
 		HIGHT(state2, KEY);
 		HIGHT(state2, KEY);
@@ -216,29 +147,7 @@ int main() {
 	cycles += (cycles2 - cycles1);
 	printf("16PT KISA=%10lld\n", cycles / loop);
 
-	cycles = 0;
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
-		F_Function_M4(state6);
-
-
-	}
-	cycles2 = cpucycles();
-	cycles += (cycles2 - cycles1);
-	printf("%10lld\n", cycles / loop);
-
-	cycles = 0;
-	cycles1 = cpucycles();
-	for (cnt_i = 0; cnt_i < loop; cnt_i++) {
-
-		F_Function_ARMv8(state6);
-
-	}
-	cycles2 = cpucycles();
-	cycles += (cycles2 - cycles1);
-	printf("%10lld\n", cycles / loop);
-
+	
 	return 0;
 }
 
