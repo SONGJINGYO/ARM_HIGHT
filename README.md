@@ -1,2 +1,2 @@
 # ARM_HIGHT
-ARMv8 ASIMD
+Parallel Implementaion of HIGHT using ASIMD instructions in ARMv8 Architecture
